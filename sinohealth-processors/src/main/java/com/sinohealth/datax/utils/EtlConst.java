@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * @author mingqiang
  * @date 2022/8/30 - 14:59
- * @desc
+ * @desc 检查常量
  */
 public interface EtlConst {
     String NULL_STR = "";
@@ -45,7 +45,6 @@ public interface EtlConst {
     //通过编码提取甲状腺信息
     String HNYGXKYY_433 = "433";
     String INIT_RESULT_FEI = "肺CT";
-    //天门市中医院通过编码提取甲状腺信息
     String TMSZYY_JZX = "MS_00001";
     //处理肺结节(Se4:IM120)
     String KH_REGX = "[（(].*?[）)]";
