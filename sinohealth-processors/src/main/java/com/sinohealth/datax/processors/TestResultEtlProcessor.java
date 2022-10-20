@@ -33,7 +33,7 @@ public class TestResultEtlProcessor implements Processor<BasTestItemTemp, Standa
         String str1 = "I°,II°,Ⅰ°,Ⅱ°,I,II,Ⅰ,Ⅱ";
         String str2 = "III,Ⅲ,IV,Ⅳ,III°,Ⅲ°,IV°,Ⅳ°,3,4";
         basTestItemTemp.setReference(str1);//阴性范围
-        basTestItemTemp.setUnit(str2);//阳性范围
+        basTestItemTemp.setUnit(str2); //阳性范围
         hashMapData.put("白带清洁度", basTestItemTemp);
     }
 
