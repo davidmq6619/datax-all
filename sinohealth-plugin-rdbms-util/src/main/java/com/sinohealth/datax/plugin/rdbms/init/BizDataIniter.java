@@ -57,7 +57,11 @@ public class BizDataIniter {
             List<StandardBasTestItem> basTestItemList = DBHelper.parseResultList(StandardBasTestItem.class, rs);
             connection.commit();
             for (StandardBasTestItem item : basTestItemList) {
-                String testitemFt = StrUtil.isNotBlank(item.getItemName()) ? item.getItemName().trim() : "";
+                String testitemFt =  "";
+                if(StrUtil.isNotBlank(item.getItemName())){
+                    testitemFt = item.getItemName().replace("（", "(")
+                                .replace("）",")").toLowerCase().trim();
+                }
                 basTestItemMap.put(testitemFt, item);
             }
             return basTestItemMap;
@@ -91,14 +95,22 @@ public class BizDataIniter {
             connection.commit();
             for (StandardBasTestItem item : basTestItemList) {
                 if (StrUtil.isBlank(item.getAliasIds())) {
-                    String testitemFt = StrUtil.isNotBlank(item.getItemName()) ? item.getItemName().trim() : "";
+                    String testitemFt =  "";
+                    if(StrUtil.isNotBlank(item.getItemName())){
+                        testitemFt = item.getItemName().replace("（", "(")
+                                .replace("）",")").toLowerCase().trim();
+                    }
                     basTestItemMap.put(testitemFt, item);
                 } else {
                     String[] list = item.getAliasIds().split(",");
                     for (String s : list) {
                         for (BasItemAlias itemAlias : basCheckItemList) {
+                            String alias = itemAlias.getAliasName().replace("（", "(")
+                                    .replace("）",")").toLowerCase().trim();
                             if (itemAlias.getName().equals(s)) {
-                                basTestItemMap.put(itemAlias.getAliasName() + ":" + item.getItemName(), item);
+                                String itemName = item.getItemName().replace("（", "(")
+                                        .replace("）",")").toLowerCase().trim();
+                                basTestItemMap.put(alias + ":" + itemName, item);
                             }
                         }
                     }

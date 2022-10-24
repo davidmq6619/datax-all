@@ -6,9 +6,10 @@ package com.sinohealth.datax.utils;
  * @desc 清洗状态值
  */
 public enum EtlStatus {
+    ETL_DATA(0,"源数据"),
     ETL_SUCCESS(1,"清洗成功"),
     ETL_ERROR_MATCH(2,"字典匹配失败"),
-    ETL_ERROR_RESULT(3,"结果转换失败"),
+    ETL_DATA_ERROR(3,"脏数据"),
     ETL_MISSING(4,"清洗未命中"),
     ETL_ERROR_DISPERSE(5,"清洗离散型失败"),
     ETL_ERROR(6,"清洗失败"),

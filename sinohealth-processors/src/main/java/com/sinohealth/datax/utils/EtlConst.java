@@ -55,6 +55,8 @@ public interface EtlConst {
     String XIONG_KEY = "胸膜";
     String QI_KEY = "气管";
     String RU_KEY = "乳";
+    String CLASS_KEY = "@#";
+    String BAO_GAO = "报告";
     /**
      * 结节直径提取正则
      */
@@ -82,9 +84,11 @@ public interface EtlConst {
     List<String> NORMAL_LIST = Arrays.asList("未见异常","未见明显异常","没有", "未见","无异常","无明显异常","正常范围","大致正常","未发现", "正常","整齐", "未闻及","未提示","未触及","未显示");
     List<String> NEGATIVE_DATA = Arrays.asList("阴","阴性");
     List<String> POSITIVE_DATA = Arrays.asList("阳","阳性","+");
-     List<String> specialPartList = Lists.newArrayList("鼻 ", "扁桃体", "胆", "耳", "肺", "附睾", "附件", "腹",
+    List<String> specialPartList = Lists.newArrayList("鼻 ", "扁桃体", "胆", "耳", "肺", "附睾", "附件", "腹",
             "肝", "肛门", "睾丸", "宫颈", "颌", "喉", "会阴", "脊柱", "甲状腺", "结肠", "口腔", "淋巴", "卵巢", "尿道", "膀胱", "盆腔", "脾", "前列腺",
             "肾", "食道", "输卵管", "输尿管", "外阴", "胃", "下肢", "血管", "咽", "眼", "腋", "胰", "阴唇", "阴道", "阴囊", "支气管", "子宫", "纵膈",
             "脊椎", "口唇", "颊", "颚", "牙", "舌","唾液腺", "食管", "脑","颅","椎动脉","颈","胸","甲状腺","甲状旁腺","垂体","松果体","生殖腺","肺",
             "心","肠","阑尾","胆","肛");
+    String itemNames="舒张压,收缩压,血糖(空腹),谷丙转氨酶,谷草转氨酶,γ-谷氨酰基转移酶,血糖(餐后2小时),低密度脂蛋白,血清甘油三酯,高密度脂蛋白,胰岛素（空腹）,血清尿酸,糖化血红蛋白,血红蛋白,血清白蛋白,血清肌酐,血小板计数,血清总胆固醇";
+
 }

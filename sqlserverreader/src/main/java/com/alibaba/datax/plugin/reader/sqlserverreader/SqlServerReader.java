@@ -7,6 +7,7 @@ import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.plugin.rdbms.reader.CommonRdbmsReader;
 import com.alibaba.datax.plugin.rdbms.util.DBUtilErrorCode;
 import com.alibaba.datax.plugin.rdbms.util.DataBaseType;
+import com.sinohealth.datax.plugin.rdbms.reader.SinohealthRdbmsReader;
 
 import java.util.List;
 
@@ -17,7 +18,7 @@ public class SqlServerReader extends Reader {
 	public static class Job extends Reader.Job {
 
 		private Configuration originalConfig = null;
-		private CommonRdbmsReader.Job commonRdbmsReaderJob;
+		private SinohealthRdbmsReader.Job commonRdbmsReaderJob;
 
 		@Override
 		public void init() {
@@ -35,7 +36,7 @@ public class SqlServerReader extends Reader {
 					com.alibaba.datax.plugin.rdbms.reader.Constant.FETCH_SIZE,
 					fetchSize);
 
-			this.commonRdbmsReaderJob = new CommonRdbmsReader.Job(
+			this.commonRdbmsReaderJob = new SinohealthRdbmsReader.Job(
 					DATABASE_TYPE);
 			this.commonRdbmsReaderJob.init(this.originalConfig);
 		}
@@ -61,12 +62,12 @@ public class SqlServerReader extends Reader {
 	public static class Task extends Reader.Task {
 
 		private Configuration readerSliceConfig;
-		private CommonRdbmsReader.Task commonRdbmsReaderTask;
+		private SinohealthRdbmsReader.Task commonRdbmsReaderTask;
 
 		@Override
 		public void init() {
 			this.readerSliceConfig = super.getPluginJobConf();
-			this.commonRdbmsReaderTask = new CommonRdbmsReader.Task(
+			this.commonRdbmsReaderTask = new SinohealthRdbmsReader.Task(
 					DATABASE_TYPE ,super.getTaskGroupId(), super.getTaskId());
 			this.commonRdbmsReaderTask.init(this.readerSliceConfig);
 		}

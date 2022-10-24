@@ -4,6 +4,7 @@ import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ReUtil;
 import com.sinohealth.datax.entity.source.BasCheckItemTemp;
 import com.sinohealth.datax.entity.source.CheckResultMsS;
+import com.sinohealth.datax.entity.source.RegCheck;
 import com.sinohealth.datax.entity.source.StandardCheckRecord;
 import com.sinohealth.datax.entity.target.CheckResultMsEtl;
 
@@ -61,16 +62,9 @@ public class EtlRuUtils {
      */
     public static final String regx = "([1-9]\\d*\\.?\\d*)|(0\\.\\d*[1-9])";
 
-    public static void etl(BasCheckItemTemp checkResultMsS, List<StandardCheckRecord> list) {
+    public static void etl(StandardCheckRecord checkResultMsS, List<StandardCheckRecord> list) {
         //取出描述，抛弃附件后的字
-        String result = checkResultMsS.getImageDescribe();
-        if (!result.endsWith("。")) {
-            result = result + "。";
-        }
-        result = result + checkResultMsS.getImageDiagnose();
-        if (result.contains("附件")) {
-            result = result.substring(0, result.indexOf("附件"));
-        }
+        String result = checkResultMsS.getItemResults();
         List<String> hitStrs = new ArrayList<>();
         String[] splitStrings = TextUtils.splitSignsToArrByParam(result, ";；。");
         int feiI = 0;
@@ -118,7 +112,7 @@ public class EtlRuUtils {
     }
 
     //构建etl结果
-    public static StandardCheckRecord buildResultByItemNameCommA(BasCheckItemTemp checkResultMsS, String itemnameComm, String result) {
+    public static StandardCheckRecord buildResultByItemNameCommA(StandardCheckRecord checkResultMsS, String itemnameComm, String result) {
         StandardCheckRecord etl = new StandardCheckRecord();
 
         etl.setCleanTime(new Date());
@@ -126,9 +120,8 @@ public class EtlRuUtils {
         etl.setInitResult(itemnameComm);
         etl.setClassName(checkResultMsS.getClassName());
         etl.setItemResults(result);
-        etl.setItemName(itemnameComm);
+        etl.setItemName(checkResultMsS.getItemName());
         etl.setItemNameComn(itemnameComm);
-        etl.setImageDescribe(checkResultMsS.getImageDescribe());
         etl.setImageDiagnose(checkResultMsS.getImageDiagnose());
         if ("1".equals(result)) {
             etl.setCleanStatus(EtlStatus.ETL_SUCCESS.getCode());

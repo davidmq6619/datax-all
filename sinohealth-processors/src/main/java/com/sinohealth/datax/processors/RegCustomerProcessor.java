@@ -6,7 +6,9 @@ import cn.hutool.core.util.StrUtil;
 import com.sinohealth.datax.common.CommonData;
 import com.sinohealth.datax.common.Processor;
 import com.sinohealth.datax.entity.source.BasCustomer;
+import com.sinohealth.datax.entity.source.RegCustomer;
 import com.sinohealth.datax.entity.source.StandardCustomerRecord;
+import com.sinohealth.datax.entity.target.Customer;
 import com.sinohealth.datax.entity.target.StandardCustomerRecordList;
 
 import java.util.ArrayList;
@@ -18,23 +20,23 @@ import java.util.List;
  * @date 2022/08/29
  * 获取用户基本信息
  **/
-public class RegCustomerProcessor implements Processor<BasCustomer, StandardCustomerRecordList> {
+public class RegCustomerProcessor implements Processor<RegCustomer, StandardCustomerRecordList> {
 
     @Override
-    public StandardCustomerRecordList dataProcess(BasCustomer customer, StandardCustomerRecordList list, CommonData commonData) {
+    public StandardCustomerRecordList dataProcess(RegCustomer customer, StandardCustomerRecordList list, CommonData commonData) {
         ArrayList<StandardCustomerRecord> listRecord = new ArrayList<>();
         StandardCustomerRecord standardCustomerRecord = new StandardCustomerRecord();
         BeanUtil.copyProperties(customer, standardCustomerRecord);
         standardCustomerRecord.setCleanTime(DateUtil.date(System.currentTimeMillis()));
-        standardCustomerRecord.setCustomerCsrq(customer.getBirthday());
-        standardCustomerRecord.setApplyTime(customer.getCheckTime());
-        standardCustomerRecord.setMobile(customer.getTel());
-        standardCustomerRecord.setVid(customer.getMemberId());
-        if("男".equals(customer.getSex())){
-            standardCustomerRecord.setSex("1");
-        }else{
-            standardCustomerRecord.setSex("0");
-        }
+        String formatBirthDate = DateUtil.format(customer.getBirthDate(), "yyyy-MM-dd");
+        standardCustomerRecord.setCustomerCsrq(formatBirthDate);
+        String format = DateUtil.format(customer.getCheckTime(), "yyyy-MM-dd");
+        standardCustomerRecord.setApplyTime(format);
+        //standardCustomerRecord.setMobile();
+        long age = DateUtil.betweenYear(customer.getBirthDate(), customer.getCheckTime(), true);
+        standardCustomerRecord.setAge(String.valueOf(age));
+        standardCustomerRecord.setVid(customer.getVid());
+        standardCustomerRecord.setSex(customer.getSex().toString());
         String csrq = standardCustomerRecord.getCustomerCsrq();
         String applyTime =standardCustomerRecord.getApplyTime();
         if(StrUtil.isNotBlank(csrq) && StrUtil.isNotBlank(applyTime)){
@@ -44,5 +46,6 @@ public class RegCustomerProcessor implements Processor<BasCustomer, StandardCust
         listRecord.add(standardCustomerRecord);
         list.setList(listRecord);
         return list;
+
     }
 }

@@ -2,15 +2,9 @@ package com.sinohealth.datax.utils;
 
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ReUtil;
-import com.sinohealth.datax.common.CommonData;
-import com.sinohealth.datax.entity.common.BasCheckItem;
-import com.sinohealth.datax.entity.source.BasCheckItemTemp;
-import com.sinohealth.datax.entity.source.BasTestItemTemp;
 import com.sinohealth.datax.entity.source.CheckResultMsS;
 import com.sinohealth.datax.entity.source.StandardCheckRecord;
 import com.sinohealth.datax.entity.target.CheckResultMsEtl;
-import com.sinohealth.datax.entity.target.CheckResultMsEtlList;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -115,10 +109,10 @@ public class EtlFeiUtils {
      */
     public static final String regx = "([1-9]\\d*\\.?\\d*)|(0\\.\\d*[1-9])";
 
-    public static void etl(BasCheckItemTemp checkResultMsS, List<StandardCheckRecord> list) {
+    public static void etl(StandardCheckRecord checkResultMsS, List<StandardCheckRecord> list) {
 
         //取出描述，抛弃附件后的字
-        String result = checkResultMsS.getImageDiagnose();
+        String result = checkResultMsS.getItemResults();
         if (result.contains("附件")) {
             result = result.substring(0, result.indexOf("附件"));
         }
@@ -186,10 +180,6 @@ public class EtlFeiUtils {
         }
 
         //小结中有结节，再跑出最大直径
-        result = checkResultMsS.getImageDescribe();
-        if (result.contains("附件")) {
-            result = result.substring(0, result.indexOf("附件"));
-        }
         //命中的语句
         hits2 = new ArrayList<>();
         splitStrings = TextUtils.splitSignsToArrByParam(result, ";；。");
@@ -243,16 +233,15 @@ public class EtlFeiUtils {
     }
 
     //构建etl结果
-    public static StandardCheckRecord buildResultByItemNameCommA(BasCheckItemTemp checkResultMsS, String itemnameComm, String result) {
+    public static StandardCheckRecord buildResultByItemNameCommA(StandardCheckRecord checkResultMsS, String itemnameComm, String result) {
         StandardCheckRecord etl = new StandardCheckRecord();
         etl.setCleanTime(new Date());
-        etl.setImageDescribe(checkResultMsS.getImageDescribe());
         etl.setImageDiagnose(checkResultMsS.getImageDiagnose());
         etl.setVid(checkResultMsS.getVid());
         etl.setInitResult(itemnameComm);
         etl.setClassName(checkResultMsS.getClassName());
         etl.setItemResults(result);
-        etl.setItemName(itemnameComm);
+        etl.setItemName(checkResultMsS.getItemName());
         etl.setItemNameComn(itemnameComm);
         etl.setCleanStatus(EtlStatus.ETL_SUCCESS.getCode());
         if ("0".equals(result) || "2".equals(result)) {
@@ -260,7 +249,7 @@ public class EtlFeiUtils {
             etl.setCleanStatus(EtlStatus.ETL_SUCCESS_NORMAL.getCode());
         }
         if (itemnameComm.equals(itemNameCommC)) {
-            if (checkResultMsS.getImageDescribe().toLowerCase().contains("cm") || checkResultMsS.getImageDescribe().toLowerCase().contains("mm")) {
+            if (checkResultMsS.getItemResults().toLowerCase().contains("cm") || checkResultMsS.getItemResults().toLowerCase().contains("mm")) {
                 etl.setUnitComm("cm");
                 etl.setItemUnit("cm");
             }
