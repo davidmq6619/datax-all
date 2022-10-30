@@ -2,14 +2,11 @@ package com.sinohealth.datax.utils;
 
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ReUtil;
-import com.sinohealth.datax.entity.source.BasCheckItemTemp;
 import com.sinohealth.datax.entity.source.CheckResultMsS;
-import com.sinohealth.datax.entity.source.RegCheck;
 import com.sinohealth.datax.entity.source.StandardCheckRecord;
-import com.sinohealth.datax.entity.target.CheckResultMsEtl;
+import com.sinohealth.datax.entity.zktarget.CheckResultMsEtl;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author mingqiang
@@ -47,8 +44,6 @@ public class EtlRuUtils {
             "团块",
             "癌",
             "Ca",
-            "肿块",
-            "腺瘤",
             "低回声",
             "混合回声"
     );
@@ -67,15 +62,17 @@ public class EtlRuUtils {
         String result = checkResultMsS.getItemResults();
         List<String> hitStrs = new ArrayList<>();
         String[] splitStrings = TextUtils.splitSignsToArrByParam(result, ";；。");
-        int feiI = 0;
-        boolean flagNoraml = false;
+        boolean flag2 = false;
         for (String str1 : splitStrings) {
-            boolean flag2 = false;
-            for (String s : EtlConst.NORMAL_LIST) {
+            boolean flagRu = false;
+            for (String s : EtlConst.RU_DATA_KEY) {
                 if (str1.contains(s)) {
-                    feiI++;
+                    flagRu = true;
                     break;
                 }
+            }
+            if (flagRu) {
+                continue;
             }
             if (str1.contains("乳")) {
                 for (String ru : ruMethod) {
@@ -84,27 +81,14 @@ public class EtlRuUtils {
                         break;
                     }
                 }
-                if (flag2) {
-                    for (String s : EtlConst.NORMAL_LIST) {
-                        if (str1.contains(s)) {
-                            flagNoraml = true;
-                            break;
-                        }
-                    }
-                    if (flagNoraml) {
-                        break;
-                    }
-                    hitStrs.add(str1);
-                    break;
-                }
+            }
+            if(flag2){
+                break;
             }
         }
-        int count = splitStrings.length;
-        if(!hitStrs.isEmpty()){
+
+        if (flag2) {
             list.add(buildResultByItemNameCommA(checkResultMsS, itemNameCommB, "1"));
-        }else if (flagNoraml || count == feiI) {
-            list.add(buildResultByItemNameCommA(checkResultMsS, itemNameCommB, "2"));
-            return;
         } else {
             list.add(buildResultByItemNameCommA(checkResultMsS, itemNameCommB, "0"));
             return;
@@ -114,7 +98,6 @@ public class EtlRuUtils {
     //构建etl结果
     public static StandardCheckRecord buildResultByItemNameCommA(StandardCheckRecord checkResultMsS, String itemnameComm, String result) {
         StandardCheckRecord etl = new StandardCheckRecord();
-
         etl.setCleanTime(new Date());
         etl.setVid(checkResultMsS.getVid());
         etl.setInitResult(itemnameComm);
@@ -123,10 +106,10 @@ public class EtlRuUtils {
         etl.setItemName(checkResultMsS.getItemName());
         etl.setItemNameComn(itemnameComm);
         etl.setImageDiagnose(checkResultMsS.getImageDiagnose());
+        etl.setImageDescribe(checkResultMsS.getItemResults());
         if ("1".equals(result)) {
             etl.setCleanStatus(EtlStatus.ETL_SUCCESS.getCode());
         } else {
-            etl.setItemResults("");
             etl.setCleanStatus(EtlStatus.ETL_SUCCESS_NORMAL.getCode());
             etl.setRemark(EtlStatus.ETL_SUCCESS_NORMAL.getMessage());
         }

@@ -5,15 +5,11 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import com.sinohealth.datax.common.CommonData;
 import com.sinohealth.datax.common.Processor;
-import com.sinohealth.datax.entity.source.BasCustomer;
 import com.sinohealth.datax.entity.source.RegCustomer;
 import com.sinohealth.datax.entity.source.StandardCustomerRecord;
-import com.sinohealth.datax.entity.target.Customer;
-import com.sinohealth.datax.entity.target.StandardCustomerRecordList;
+import com.sinohealth.datax.entity.zktarget.StandardCustomerRecordList;
 
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 
 /**
  * @author mingqiang

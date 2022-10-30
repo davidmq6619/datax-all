@@ -1,7 +1,6 @@
-package com.sinohealth.datax.entity.target;
+package com.sinohealth.datax.entity.zktarget;
 
 import com.sinohealth.datax.entity.source.StandardCustomerRecord;
-import com.sinohealth.datax.entity.source.StandardTestRecord;
 
 import java.util.List;
 

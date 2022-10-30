@@ -245,7 +245,7 @@ public class SinohealthRdbmsWriter {
                 LOG.info("processClass:[{}]", writerSliceConfig.getString(Key.PROCESSOR_CLASS));
                 LOG.info("清洗数据准备");
                 this.sourceClass = Class.forName("com.sinohealth.datax.entity.source." + writerSliceConfig.getString(Key.SOURCE_CLASS));
-                this.targetClass = Class.forName("com.sinohealth.datax.entity.target." + writerSliceConfig.getString(Key.TARGET_CLASS));
+                this.targetClass = Class.forName("com.sinohealth.datax.entity.zktarget." + writerSliceConfig.getString(Key.TARGET_CLASS));
                 this.processor = (Processor) new DefaultObjectFactory().create(Class.forName("com.sinohealth.datax.processors." + writerSliceConfig.getString(Key.PROCESSOR_CLASS)));
             } catch (ClassNotFoundException ex) {
                 LOG.error("sourceClass/targetClass/processor class not found", ex);

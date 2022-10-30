@@ -1,6 +1,5 @@
-package com.sinohealth.datax.entity.target;
+package com.sinohealth.datax.entity.zktarget;
 
-import com.sinohealth.datax.entity.source.StandardCheckRecord;
 import com.sinohealth.datax.entity.source.StandardDiagnoseRecord;
 
 import java.io.Serializable;

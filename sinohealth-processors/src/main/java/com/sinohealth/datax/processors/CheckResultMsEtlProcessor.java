@@ -4,10 +4,9 @@ import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ReUtil;
 import com.sinohealth.datax.common.CommonData;
 import com.sinohealth.datax.common.Processor;
-import com.sinohealth.datax.entity.source.BasTestItemTemp;
 import com.sinohealth.datax.entity.source.CheckResultMsS;
-import com.sinohealth.datax.entity.target.CheckResultMsEtl;
-import com.sinohealth.datax.entity.target.CheckResultMsEtlList;
+import com.sinohealth.datax.entity.zktarget.CheckResultMsEtl;
+import com.sinohealth.datax.entity.zktarget.CheckResultMsEtlList;
 
 import java.util.*;
 import java.util.stream.Collectors;

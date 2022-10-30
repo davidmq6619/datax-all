@@ -4,7 +4,7 @@ import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.ReUtil;
 import com.sinohealth.datax.entity.source.CheckResultMsS;
 import com.sinohealth.datax.entity.source.StandardCheckRecord;
-import com.sinohealth.datax.entity.target.CheckResultMsEtl;
+import com.sinohealth.datax.entity.zktarget.CheckResultMsEtl;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -119,29 +119,12 @@ public class EtlFeiUtils {
         //命中的语句
         List<Map<String, String>> hits2 = new ArrayList<>();
         boolean flagFei = false;
-        int feiI = 0;
         String[] splitStrings = TextUtils.splitSignsToArrByParam(result, ";；。");
         for (String str1 : splitStrings) {
-            for (String s : EtlConst.NORMAL_LIST) {
-                if (str1.contains(s)) {
-                    feiI++;
-                    break;
-                }
-            }
             if (str1.contains("肺") || str1.contains("胸膜") || str1.contains("气管")) {
                 if (str1.contains("毛玻璃") || str1.contains("磨玻璃") || str1.contains("团块") || str1.contains("结节") || str1.contains("占位") || str1.contains("肿块") || str1.contains("高密度影")) {
+                    flagFei = true;
                     boolean flag7 = ReUtil.contains(regx, str1) && (str1.contains("cm") || str1.contains("CM") || str1.contains("Cm") || str1.contains("cM") || str1.contains("mM") || str1.contains("MM") || str1.contains("mm") || str1.contains("Mm"));
-                    boolean flagNoraml = false;
-                    for (String s : EtlConst.NORMAL_LIST) {
-                        if (str1.contains(s)) {
-                            flagNoraml = true;
-                            flagFei = true;
-                            break;
-                        }
-                    }
-                    if (flagNoraml) {
-                        break;
-                    }
                     if (str1.contains("结节状钙化") || str1.contains("钙化结节影")) {
                         if (flag7) {
                             Map<String, String> map = new HashMap<>();
@@ -168,20 +151,19 @@ public class EtlFeiUtils {
                 }
             }
         }
-        int count = splitStrings.length;
-        if(!hits2.isEmpty()){
-            list.add(buildResultByItemNameCommA(checkResultMsS, itemNameCommB, "1"));
-        }else if (flagFei || count == feiI) {
-            list.add(buildResultByItemNameCommA(checkResultMsS, itemNameCommB, "2"));
-            return;
-        } else {
-            list.add(buildResultByItemNameCommA(checkResultMsS, itemNameCommB, "0"));
-            return;
+        if(flagFei){
+            if(!hits2.isEmpty()){
+                list.add(buildResultByItemNameCommA(checkResultMsS, itemNameCommB, "1"));
+            }else {
+                list.add(buildResultByItemNameCommA(checkResultMsS, itemNameCommB, "0"));
+                return;
+            }
         }
+
 
         //小结中有结节，再跑出最大直径
         //命中的语句
-        hits2 = new ArrayList<>();
+       /* hits2 = new ArrayList<>();
         splitStrings = TextUtils.splitSignsToArrByParam(result, ";；。");
         for (String str1 : splitStrings) {
             if (str1.contains("肺") || str1.contains("胸膜") || str1.contains("气管")) {
@@ -212,7 +194,7 @@ public class EtlFeiUtils {
                     }
                 }
             }
-        }
+        }*/
 
         //按优先级取出最高的那句话：（结节 = 磨玻璃 = 毛玻璃 = 团块) > 高密度影&&目标语句有结节直径 > 直径大小
         Map<String, List<Map<String, String>>> zhijingMap = hits2.stream().collect(Collectors.groupingBy(x -> x.get("zhijing")));
@@ -237,6 +219,7 @@ public class EtlFeiUtils {
         StandardCheckRecord etl = new StandardCheckRecord();
         etl.setCleanTime(new Date());
         etl.setImageDiagnose(checkResultMsS.getImageDiagnose());
+        etl.setImageDescribe(checkResultMsS.getItemResults());
         etl.setVid(checkResultMsS.getVid());
         etl.setInitResult(itemnameComm);
         etl.setClassName(checkResultMsS.getClassName());
@@ -244,7 +227,7 @@ public class EtlFeiUtils {
         etl.setItemName(checkResultMsS.getItemName());
         etl.setItemNameComn(itemnameComm);
         etl.setCleanStatus(EtlStatus.ETL_SUCCESS.getCode());
-        if ("0".equals(result) || "2".equals(result)) {
+        if ("0".equals(result)) {
             etl.setRemark(EtlStatus.ETL_SUCCESS_NORMAL.getMessage());
             etl.setCleanStatus(EtlStatus.ETL_SUCCESS_NORMAL.getCode());
         }

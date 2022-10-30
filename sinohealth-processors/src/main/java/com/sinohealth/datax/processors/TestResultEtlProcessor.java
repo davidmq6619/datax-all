@@ -9,7 +9,7 @@ import com.sinohealth.datax.common.Processor;
 import com.sinohealth.datax.entity.common.StandardBasTestItem;
 import com.sinohealth.datax.entity.source.RegTest;
 import com.sinohealth.datax.entity.source.StandardTestRecord;
-import com.sinohealth.datax.entity.target.StandardTestRecordList;
+import com.sinohealth.datax.entity.zktarget.StandardTestRecordList;
 import com.sinohealth.datax.utils.EtlConst;
 import com.sinohealth.datax.utils.EtlStatus;
 import com.sinohealth.datax.utils.TextUtils;
@@ -432,8 +432,8 @@ public class TestResultEtlProcessor implements Processor<RegTest, StandardTestRe
                                     str.setRemark(EtlStatus.ETL_SUSPICIOUS.getMessage());
                                 } else {
                                     str.setResultsDiscrete("0");
-                                    str.setCleanStatus(EtlStatus.ETL_SUCCESS.getCode());
-                                    str.setRemark(EtlStatus.ETL_SUCCESS.getMessage());
+                                    str.setCleanStatus(EtlStatus.ETL_DATA_ERROR.getCode());
+                                    str.setRemark(EtlStatus.ETL_DATA_ERROR.getMessage());
                                 }
                             }
                         }
@@ -442,8 +442,8 @@ public class TestResultEtlProcessor implements Processor<RegTest, StandardTestRe
                 }
             }
         } else {
-            str.setCleanStatus(EtlStatus.ETL_SUCCESS.getCode());
-            str.setRemark(EtlStatus.ETL_SUCCESS.getMessage());
+            str.setCleanStatus(EtlStatus.ETL_DATA_ERROR.getCode());
+            str.setRemark(EtlStatus.ETL_DATA_ERROR.getMessage());
         }
     }
 

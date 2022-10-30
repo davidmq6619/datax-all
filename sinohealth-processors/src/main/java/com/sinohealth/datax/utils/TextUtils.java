@@ -46,12 +46,26 @@ public class TextUtils {
      */
     public static String specialAddSigns(String itemResults) {
         if (StrUtil.isNotBlank(itemResults)) {
-            for (int j = 0; j < EtlConst.specialPartList.size(); j++) {
+            /*for (int j = 0; j < EtlConst.specialPartList.size(); j++) {
                 if (itemResults.contains(EtlConst.specialPartList.get(j))){
                     itemResults = itemResults.replaceAll(EtlConst.specialPartList.get(j), "。"+EtlConst.specialPartList.get(j));
+                }
+            }*/
+            for (int j = 0; j < EtlConst.specialPartList.size(); j++) {
+                if (itemResults.contains(EtlConst.specialPartList.get(j) + ":")
+                        || itemResults.contains(EtlConst.specialPartList.get(j) + "：")) {
+                    int index = itemResults.indexOf(EtlConst.specialPartList.get(j) + ":") > -1
+                            ? itemResults.indexOf(EtlConst.specialPartList.get(j) + ":")
+                            : itemResults.indexOf(EtlConst.specialPartList.get(j) + "：");
+                    itemResults = addSigns(itemResults, index);
                 }
             }
         }
         return itemResults;
+    }
+
+    public static String addSigns(String itemResults, int index) {
+        StringBuffer stringBuffer = new StringBuffer(itemResults);
+        return stringBuffer.insert(index, ",").toString();
     }
 }

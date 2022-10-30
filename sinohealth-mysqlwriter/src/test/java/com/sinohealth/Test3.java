@@ -5,7 +5,7 @@ import com.alibaba.datax.plugin.rdbms.util.DBUtil;
 import com.alibaba.datax.plugin.rdbms.util.DataBaseType;
 import com.google.common.collect.Maps;
 import com.sinohealth.datax.entity.common.BasTestItem;
-import com.sinohealth.datax.entity.target.LisTestResultT;
+import com.sinohealth.datax.entity.zktarget.LisTestResultT;
 import com.sinohealth.datax.reflection.Reflector;
 import com.sinohealth.datax.utils.DBHelper;
 

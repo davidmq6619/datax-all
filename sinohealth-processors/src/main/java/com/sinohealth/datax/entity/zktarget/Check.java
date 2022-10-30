@@ -1,4 +1,4 @@
-package com.sinohealth.datax.entity.target;
+package com.sinohealth.datax.entity.zktarget;
 
 import com.sinohealth.datax.reflection.annotations.db_alias;
 

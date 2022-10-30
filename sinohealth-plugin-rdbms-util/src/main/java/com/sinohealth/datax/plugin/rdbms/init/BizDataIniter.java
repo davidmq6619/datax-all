@@ -165,7 +165,12 @@ public class BizDataIniter {
             List<BasCheckItem> basCheckItemList = DBHelper.parseResultList(BasCheckItem.class, rs);
             connection.commit();
             for (BasCheckItem item : basCheckItemList) {
-                checkItemMap.put(item.getItemName(), item);
+                String testitemFt = "";
+                if(StrUtil.isNotBlank(item.getItemName())){
+                    testitemFt = item.getItemName().replace("（", "(")
+                            .replace("）",")").trim();
+                }
+                checkItemMap.put(testitemFt, item);
             }
             return checkItemMap;
         } catch (Exception e) {

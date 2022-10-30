@@ -13,8 +13,8 @@ public class RegCheck implements Serializable {
 
     private String vid;
 
-    @db_alias("init_results")
-    private String initResults;
+    @db_alias("item_ft")
+    private String itemFt;
 
     @db_alias("item_name")
     private String itemName;
@@ -29,6 +29,7 @@ public class RegCheck implements Serializable {
     @db_alias("normal_h")
     private String normalH;
 
+    private String summary;
 
     public String getVid() {
         return vid;
@@ -38,20 +39,20 @@ public class RegCheck implements Serializable {
         this.vid = vid;
     }
 
+    public String getItemFt() {
+        return itemFt;
+    }
+
+    public void setItemFt(String itemFt) {
+        this.itemFt = itemFt;
+    }
+
     public String getItemName() {
         return itemName;
     }
 
     public void setItemName(String itemName) {
         this.itemName = itemName;
-    }
-
-    public String getInitResults() {
-        return initResults;
-    }
-
-    public void setInitResults(String initResults) {
-        this.initResults = initResults;
     }
 
     public String getUnit() {
@@ -84,5 +85,13 @@ public class RegCheck implements Serializable {
 
     public void setNormalH(String normalH) {
         this.normalH = normalH;
+    }
+
+    public String getSummary() {
+        return summary;
+    }
+
+    public void setSummary(String summary) {
+        this.summary = summary;
     }
 }

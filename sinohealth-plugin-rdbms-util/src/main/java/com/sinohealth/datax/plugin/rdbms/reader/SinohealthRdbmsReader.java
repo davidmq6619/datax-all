@@ -22,11 +22,8 @@ import com.sinohealth.datax.common.CommonData;
 import com.sinohealth.datax.common.DBProperty;
 import com.sinohealth.datax.common.Processor;
 import com.sinohealth.datax.entity.common.*;
-import com.sinohealth.datax.entity.source.StandardCheckRecord;
-import com.sinohealth.datax.entity.source.StandardDiagnoseRecord;
-import com.sinohealth.datax.entity.source.StandardTestRecord;
-import com.sinohealth.datax.entity.source.StandardCustomerRecord;
-import com.sinohealth.datax.entity.target.*;
+import com.sinohealth.datax.entity.source.*;
+import com.sinohealth.datax.entity.zktarget.*;
 import com.sinohealth.datax.plugin.rdbms.init.BizDataIniter;
 import com.sinohealth.datax.reflection.Reflector;
 import com.sinohealth.datax.reflection.factory.DefaultObjectFactory;
@@ -187,7 +184,7 @@ public class SinohealthRdbmsReader {
                 LOG.info("targetClass:[{}]", readerSliceConfig.getString(com.alibaba.datax.plugin.rdbms.writer.Key.TARGET_CLASS));
                 LOG.info("processClass:[{}]", readerSliceConfig.getString(com.alibaba.datax.plugin.rdbms.writer.Key.PROCESSOR_CLASS));
                 this.sourceClass = Class.forName("com.sinohealth.datax.entity.source." + readerSliceConfig.getString(com.alibaba.datax.plugin.rdbms.writer.Key.SOURCE_CLASS));
-                this.targetClass = Class.forName("com.sinohealth.datax.entity.target." + readerSliceConfig.getString(com.alibaba.datax.plugin.rdbms.writer.Key.TARGET_CLASS));
+                this.targetClass = Class.forName("com.sinohealth.datax.entity.zktarget." + readerSliceConfig.getString(com.alibaba.datax.plugin.rdbms.writer.Key.TARGET_CLASS));
                 this.processor = (Processor) new DefaultObjectFactory().create(Class.forName("com.sinohealth.datax.processors." + readerSliceConfig.getString(com.alibaba.datax.plugin.rdbms.writer.Key.PROCESSOR_CLASS)));
             } catch (ClassNotFoundException ex) {
                 LOG.error("sourceClass/targetClass/processor class not found", ex);
@@ -434,6 +431,24 @@ public class SinohealthRdbmsReader {
                                 List<StandardDiagnoseRecord> details = ((StandardDiagnoseRecordList) targetEntity).getList();
                                 if (CollectionUtil.isNotEmpty(details)) {
                                     for (StandardDiagnoseRecord detail : details) {
+                                        Record record = recordSender.createRecord();
+                                        record = ReflectUtil.getRecord(record, detail);
+                                        recordSender.sendToWriter(record);
+                                    }
+                                }
+                            } else if (targetEntity instanceof StandardRegStdInfoList) {
+                                List<StandardRegStdInfo> details = ((StandardRegStdInfoList) targetEntity).getList();
+                                if (CollectionUtil.isNotEmpty(details)) {
+                                    for (StandardRegStdInfo detail : details) {
+                                        Record record = recordSender.createRecord();
+                                        record = ReflectUtil.getRecord(record, detail);
+                                        recordSender.sendToWriter(record);
+                                    }
+                                }
+                            } else if (targetEntity instanceof StandardMnStdInfoList) {
+                                List<StandardMnStdInfo> details = ((StandardMnStdInfoList) targetEntity).getList();
+                                if (CollectionUtil.isNotEmpty(details)) {
+                                    for (StandardMnStdInfo detail : details) {
                                         Record record = recordSender.createRecord();
                                         record = ReflectUtil.getRecord(record, detail);
                                         recordSender.sendToWriter(record);
