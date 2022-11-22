@@ -9,14 +9,12 @@ import com.sinohealth.datax.entity.common.BasItemAlias;
 import com.sinohealth.datax.entity.source.RegCheck;
 import com.sinohealth.datax.entity.source.StandardDiagnoseRecord;
 import com.sinohealth.datax.entity.zktarget.StandardDiagnoseRecordList;
-import com.sinohealth.datax.utils.DiagnoseUtils;
-import com.sinohealth.datax.utils.EtlConst;
-import com.sinohealth.datax.utils.EtlStatus;
-import com.sinohealth.datax.utils.TextUtils;
+import com.sinohealth.datax.utils.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Struct;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -35,128 +33,127 @@ public class DiagnoseResultProcessor implements Processor<RegCheck, StandardDiag
 
     @Override
     public StandardDiagnoseRecordList dataProcess(RegCheck check, StandardDiagnoseRecordList list, CommonData commonData) {
-        /*check.setItemFt("双肾输尿管膀胱前列腺彩超");
-        check.setSummary("右肾结晶");*/
-        String imageDiagnose = check.getSummary();
-        ArrayList<StandardDiagnoseRecord> records = new ArrayList<>();
-        String className = check.getItemFt();
-        StandardDiagnoseRecord record = new StandardDiagnoseRecord();
-        record.setClassName(className);
-        record.setVid(check.getVid());
-        record.setImageDiagnose(imageDiagnose);
-        record.setCleanTime(new Date());
-
-        if (StrUtil.isBlank(imageDiagnose) || StrUtil.isBlank(className)) {
-            record.setCleanStatus(EtlStatus.ETL_MISSING.getCode());
-            record.setRemark(EtlStatus.ETL_MISSING.getMessage());
-            records.add(record);
-            list.setList(records);
-            return list;
+        ArrayList<StandardDiagnoseRecord> recordList = new ArrayList<>();
+        String summary = check.getResults();
+        if (StrUtil.isNotBlank(summary)) {
+            summary = summary.replace("\\n", "。");
         }
-        imageDiagnose = specialProcess4(imageDiagnose);
-        imageDiagnose = imageDiagnose.replaceAll(" ", "");
-        check.setSummary(imageDiagnose);
-        inspectionKeywordList = commonData.getBasInspectionKeywordList();
-        BasItemAlias basItemAlias = DiagnoseUtils.calcuAliasContain(className, commonData.getBasItemAliasList());
-
-        if (Objects.isNull(basItemAlias)) {
-            record.setCleanStatus(EtlStatus.ETL_ERROR_MATCH.getCode());
-            record.setRemark(EtlStatus.ETL_ERROR_MATCH.getMessage());
-            records.add(record);
-            list.setList(records);
-            return list;
-        }
-        StandardDiagnoseRecordList recordList = preProcessItemResult(check, basItemAlias.getName(), imageDiagnose);
-        if (Objects.nonNull(recordList) && Objects.nonNull(recordList.getList()) && recordList.getList().size() > 0) {
-            return recordList;
-        }
-        //判断是否无异常
-        String[] splitStrings = TextUtils.splitSignsToArrByParam(imageDiagnose, ";；。");
-        int count = splitStrings.length;
-        int i = 0;
-        boolean flagI = false;
-        int j = 0;
-        boolean flagJ = false;
-        int k = 0;
-        boolean flagK = false;
-        for (String s : splitStrings) {
-            for (String str : EtlConst.NORMAL_LIST) {
-                if (s.contains(str)) {
-                    flagI = true;
-                    break;
-                }
-            }
-            if (flagI) {
-                i++;
-            }
-            flagI = false;
-        }
-
-        for (String s : splitStrings) {
-            for (String str : EtlConst.ETL_NOT_DOING) {
-                if (s.contains(str)) {
-                    flagJ = true;
-                    break;
-                }
-            }
-            if (flagJ) {
-                j++;
-            }
-            flagJ = false;
-        }
-        for (String s : splitStrings) {
-            for (String str : EtlConst.ETL_SUSPICIOUS) {
-                if (s.contains(str)) {
-                    flagK = true;
-                    break;
-                }
-            }
-            if (flagK) {
-                k++;
-            }
-            flagK = false;
-        }
-        //特殊处理
-        boolean hpvStatus = false;
-        if ("人乳头瘤病毒(HPV)核酸检测(HC2法)".equals(record.getClassName())) {
-            String[] stringHPV = record.getImageDiagnose().split("\n");
-            int htvI = 0;
-            for (String s : stringHPV) {
-                if (s.contains("低危型：")) {
-                    String result1 = s.replace("低危型：", "");
-                    if ("阴性".equals(result1)) {
-                        htvI++;
-                    }
-                } else if (s.contains("高危型：")) {
-                    String result1 = s.replace("高危型：", "");
-                    if ("阴性".equals(result1)) {
-                        htvI++;
-                    }
-                }
-            }
-            if (stringHPV.length == htvI) {
-                hpvStatus = true;
-            }
-        }
-        if (count == i || hpvStatus) {
-            record.setCleanStatus(EtlStatus.ETL_SUCCESS_NORMAL.getCode());
-            record.setRemark(EtlStatus.ETL_SUCCESS_NORMAL.getMessage());
-        } else if (count == j) {
-            record.setCleanStatus(EtlStatus.ETL_NOT_DOING.getCode());
-            record.setRemark(EtlStatus.ETL_NOT_DOING.getMessage());
-        } else if (count == k) {
-            record.setCleanStatus(EtlStatus.ETL_SUSPICIOUS.getCode());
-            record.setRemark(EtlStatus.ETL_SUSPICIOUS.getMessage());
+        if (StrUtil.isNotBlank(summary)) {
+            summary = summary.replaceFirst("★", "");
         } else {
-            record.setCleanStatus(EtlStatus.ETL_MISSING.getCode());
-            record.setRemark(EtlStatus.ETL_MISSING.getMessage());
+            summary = "超声、X线、CT、磁共振、红外线等影像医学检查结论已根据体检结果进行评估，相关图像资料，请参阅体检报告或至体检中心获取。";
         }
-        records.add(record);
-        list.setList(records);
+        summary = specialProcess4(summary);
+        summary = summary.replaceAll(" ", "");
+        inspectionKeywordList = commonData.getBasInspectionKeywordList();
+        summary = summary.replace("*", "");
+        String[] summaryArr = summary.split("★");
+        for (String s : summaryArr) {
+            List<StandardDiagnoseRecord> standardDiagnoseRecords = logicJudgeInspection(s, commonData.getBasItemAliasList(), check);
+            if (standardDiagnoseRecords == null) {
+                standardDiagnoseRecords = new ArrayList<StandardDiagnoseRecord>();
+            }
+            recordList.addAll(standardDiagnoseRecords);
+        }
+        list.setList(recordList);
         return list;
     }
 
-    private StandardDiagnoseRecordList preProcessItemResult(RegCheck check, String itemName, String itemResults) {
+    // inspectionItem： 眼科检查结果:屈光不正
+    private List<StandardDiagnoseRecord> logicJudgeInspection(String inspectionItem, List<BasItemAlias> allItemAlias, RegCheck check) {
+        //List<DiseaseRiskNewDto> diseaseRiskList = Lists.newArrayList();
+
+
+        /**
+         * -1、先判断该总结项中是否含有冒号，不含冒号的选项，不做处理，直接跳过 0、 先根据冒号切断，取第一个项目别名，
+         * 根据项目别名查询base_item_alias匹配项目名，再根据项目名查询base_inspection_keyword
+         * 1、请逐个分句匹配关键字，（没有逗号的按照句号匹配）， 关键字匹配中，遇到【建议】请删掉建议后面的内容，是发散的故事性的，不客观的；
+         * 4、否定副词：negativeWordList = ["无","没有", "未见", "正常", "未发现"] 上述情况均排除后，
+         * 查询可能匹配大于一个异常名称，唯一最大匹配，去掉重复。
+         */
+        String itemName = "";
+        String itemResults = "";
+        String itemResultsBak = "";
+        if (inspectionItem.indexOf(":") > -1 || inspectionItem.indexOf("：") > -1) {// 根据中英文冒号截取检测项目
+            int chIndex = inspectionItem.indexOf(":");
+            int enIndex = inspectionItem.indexOf("：");
+            int splitIndex = 0;
+            if (chIndex == -1) {
+                splitIndex = enIndex;
+            } else if (enIndex == -1) {
+                splitIndex = chIndex;
+            } else {// 都包含
+                splitIndex = chIndex > enIndex ? enIndex : chIndex;
+            }
+            String itemAlias = inspectionItem.substring(0, splitIndex);
+            if(itemAlias.endsWith("提示")){
+                itemAlias = itemAlias.substring(0,itemAlias.length()-2);
+            }else if(itemAlias.endsWith("结果")){
+                itemAlias = itemAlias.substring(0,itemAlias.length()-2);
+            }
+            itemAlias = itemAlias.replaceAll("^\\d+\\.","");
+            BasItemAlias resultAlias = DocSimulateUtils.calcuAliasContain(itemAlias, allItemAlias);
+            if (resultAlias != null) {
+                // 获取项目名和检查结果
+                itemName = resultAlias.getName();
+                itemResults = inspectionItem.substring(splitIndex);
+                itemResultsBak = inspectionItem.substring(0, splitIndex);
+            } else {
+
+               /* boolean falg = false;
+                String keywords = DataToBeStandardizedServiceImpl.statickeyword;
+                if (StrUtil.isNotBlank(keywords)) {
+                    for (String keyword : DataToBeStandardizedServiceImpl.statickeyword.split(Health100ETLContants.SPLIT_DOUHAO)) {
+                        if (StrUtil.isNotBlank(keyword) &&StrUtil.isNotBlank(itemAlias) && itemAlias.contains(keyword.trim())) {
+                            falg=true;
+                            break;
+                        }
+                    }
+                } else {
+                    falg = true;
+                }
+                if (falg) {
+                    DataToBeStandardized dataToBeStandardized = new DataToBeStandardized();
+                    dataToBeStandardized.setItemName(itemAlias);
+                    dataToBeStandardized.setStatus(0);//待处理
+                    dataToBeStandardized.setType(DataTypeEnum.CHECK_METHOD_ALIAS.getCode());
+                    dataToBeStandardizedManager.save(dataToBeStandardized);
+                }*/
+                logger.info("未识别出的别名：{}",itemAlias);
+                return null;
+            }
+        } else {
+            /*
+             * 如果无法根据冒号切分出项目别名， 则直接根据整句话的相似度获取最相近的项目别名，然后得到项目名称， 并截取项目别名之后的内容，即为检查结果，继续判断
+             */
+            if (inspectionItem.indexOf("建议") > -1) {
+                inspectionItem = inspectionItem.substring(0, inspectionItem.indexOf("建议"));
+            }
+            BasItemAlias resultAlias = DocSimulateUtils.calcuAliasContain(inspectionItem, allItemAlias);
+            if (resultAlias != null) {
+                // 获取项目名和检查结果
+                itemName = resultAlias.getName();
+                String aliasName = resultAlias.getAliasName();
+                char[] cArr = aliasName.toCharArray();
+
+                for (char c : cArr) {
+                    String str = makeQueryStringAllRegExp(String.valueOf(c));
+                    inspectionItem = inspectionItem.replaceFirst(str, "");
+                }
+                itemResults = inspectionItem;
+            } else {
+                return null;
+            }
+        }
+        List<StandardDiagnoseRecord> records = preProcessItemResult(itemName, itemResults, check);
+        if (records == null) {
+            records = preProcessItemResult(itemName, itemResults, check);
+        }
+
+        return records;
+    }
+
+    private  List<StandardDiagnoseRecord> preProcessItemResult(String itemName, String itemResults, RegCheck check) {
 
         StandardDiagnoseRecordList recordList = new StandardDiagnoseRecordList();
         ArrayList<StandardDiagnoseRecord> list = new ArrayList<>();
@@ -200,8 +197,7 @@ public class DiagnoseResultProcessor implements Processor<RegCheck, StandardDiag
                 list.addAll(addRelateDisease(itemName, clause, check));
             }
         }
-        recordList.setList(list);
-        return recordList;
+        return list;
     }
 
     // 预处理语句:如果整句出现否定副词，就删掉"**、"
@@ -332,11 +328,10 @@ public class DiagnoseResultProcessor implements Processor<RegCheck, StandardDiag
                 record.setItemResults(inspectionKeyword.getDiseaseSigns());
                 //record.setDiseaseName(inspectionKeyword.getDiseaseSigns());
                 record.setItemName(inspectionKeyword.getShowName());
-                record.setImageDiagnose(check.getSummary());
                 record.setCleanStatus(1);
                 record.setCleanTime(new Date());
                 record.setItemId(inspectionKeyword.getId().toString());
-                record.setClassName(check.getItemFt());
+                record.setClassName(itemName);
                 list.add(record);
             }
         }
@@ -358,5 +353,19 @@ public class DiagnoseResultProcessor implements Processor<RegCheck, StandardDiag
         }
         List<BasInspectionKeyword> newList = new ArrayList<>(newMap.values());
         return newList;
+    }
+
+    /**
+     * 转义正则特殊字符 （$()*+.[]?\^{} \\需要第一个替换，否则replace方法替换时会有逻辑bug
+     */
+    public String makeQueryStringAllRegExp(String str) {
+        if (StringUtils.isBlank(str)) {
+            return str;
+        }
+
+        return str.replace("\\", "\\\\").replace("*", "\\*").replace("+", "\\+").replace("|", "\\|").replace("{", "\\{")
+                .replace("}", "\\}").replace("(", "\\(").replace(")", "\\)").replace("^", "\\^").replace("$", "\\$")
+                .replace("[", "\\[").replace("]", "\\]").replace("?", "\\?").replace(",", "\\,").replace(".", "\\.")
+                .replace("&", "\\&");
     }
 }

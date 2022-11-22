@@ -113,6 +113,11 @@ public class EtlFeiUtils {
 
         //取出描述，抛弃附件后的字
         String result = checkResultMsS.getItemResults();
+        result= result.replaceAll(EtlConst.REGX_SENSITIVE, "******");
+        /*if(!result.endsWith("。")){
+            result = result + "。";
+        }
+        result = result + checkResultMsS.getImageDiagnose();*/
         if (result.contains("附件")) {
             result = result.substring(0, result.indexOf("附件"));
         }
@@ -123,8 +128,20 @@ public class EtlFeiUtils {
         for (String str1 : splitStrings) {
             if (str1.contains("肺") || str1.contains("胸膜") || str1.contains("气管")) {
                 if (str1.contains("毛玻璃") || str1.contains("磨玻璃") || str1.contains("团块") || str1.contains("结节") || str1.contains("占位") || str1.contains("肿块") || str1.contains("高密度影")) {
-                    flagFei = true;
                     boolean flag7 = ReUtil.contains(regx, str1) && (str1.contains("cm") || str1.contains("CM") || str1.contains("Cm") || str1.contains("cM") || str1.contains("mM") || str1.contains("MM") || str1.contains("mm") || str1.contains("Mm"));
+                    flagFei = true;
+                    boolean flagNormal = false;
+                    for (String s : EtlConst.NORMAL_LIST) {
+                        if (str1.contains(s) && !flag7) {
+                            flagNormal = true;
+                            break;
+                        }
+                    }
+                    if (flagNormal) {
+                        if (!str1.contains("密度影")) {
+                            continue;
+                        }
+                    }
                     if (str1.contains("结节状钙化") || str1.contains("钙化结节影")) {
                         if (flag7) {
                             Map<String, String> map = new HashMap<>();
@@ -209,7 +226,7 @@ public class EtlFeiUtils {
                 finalHit = zhijingOrder(hits5);
             }
             //添加最大结节直径
-            list.add(buildResultByItemNameCommA(checkResultMsS, itemNameCommC, String.valueOf(zhijingOrderCM(finalHit))));
+            list.add(buildResultByItemNameCommA(checkResultMsS, itemNameCommC, String.valueOf(zhijingOrderMM(finalHit))));
         }
         //定位上述条件在哪一句中 end
     }
@@ -232,9 +249,9 @@ public class EtlFeiUtils {
             etl.setCleanStatus(EtlStatus.ETL_SUCCESS_NORMAL.getCode());
         }
         if (itemnameComm.equals(itemNameCommC)) {
-            if (checkResultMsS.getItemResults().toLowerCase().contains("cm") || checkResultMsS.getItemResults().toLowerCase().contains("mm")) {
-                etl.setUnitComm("cm");
-                etl.setItemUnit("cm");
+            if ( checkResultMsS.getItemResults() !=null && checkResultMsS.getItemResults().toLowerCase().contains("mm")) {
+                etl.setUnitComm("mm");
+                etl.setItemUnit("mm");
             }
         }
         return etl;
@@ -292,6 +309,33 @@ public class EtlFeiUtils {
                     cur_zhijing = tempValue;
                 } else if (hit.contains("mm") || hit.contains("MM") || hit.contains("Mm") || hit.contains("mM")) {
                     cur_zhijing = tempValue / 10;
+                }
+            }
+        }
+
+        return cur_zhijing;
+    }
+
+    public static double zhijingOrderMM(String hit) {
+        double cur_zhijing = 0;
+        List<String> listS = new ArrayList<>();
+        String tempResult = hit.toLowerCase();
+        String[] tempResultList = tempResult.split("[,，]");
+        for (String s : tempResultList) {
+            if(s.contains("cm") || s.contains("mm")){
+                listS.addAll(ReUtil.findAll(regx, s, 0));
+            }
+        }
+        if (!listS.isEmpty()) {
+            listS.sort((x1, x2) -> Double.valueOf(x1).compareTo(Double.valueOf(x2)));
+            String s = listS.get(listS.size() - 1);
+
+            if (NumberUtil.isNumber(s)) {
+                double tempValue = Double.valueOf(s);
+                if (hit.contains("cm") || hit.contains("CM") || hit.contains("Cm") || hit.contains("cM")) {
+                    cur_zhijing = tempValue * 10;
+                } else if (hit.contains("mm") || hit.contains("MM") || hit.contains("Mm") || hit.contains("mM")) {
+                    cur_zhijing = tempValue;
                 }
             }
         }

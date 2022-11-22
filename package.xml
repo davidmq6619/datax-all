@@ -31,13 +31,13 @@
             </includes>
             <outputDirectory>datax</outputDirectory>
         </fileSet>
-        <fileSet>
+       <!-- <fileSet>
             <directory>sqlserverreader/target/datax/</directory>
             <includes>
                 <include>**/*.*</include>
             </includes>
             <outputDirectory>datax</outputDirectory>
-        </fileSet>
+        </fileSet>-->
         <!-- writer -->
         <fileSet>
             <directory>postgresqlwriter/target/datax/</directory>
@@ -46,7 +46,7 @@
             </includes>
             <outputDirectory>datax</outputDirectory>
         </fileSet>
-        <fileSet>
+        <!--<fileSet>
             <directory>sqlserverwriter/target/datax/</directory>
             <includes>
                 <include>**/*.*</include>
@@ -59,14 +59,14 @@
                 <include>**/*.*</include>
             </includes>
             <outputDirectory>datax</outputDirectory>
-        </fileSet>
+        </fileSet>-->
         <!-- writer -->
-        <fileSet>
+        <!--<fileSet>
             <directory>mysqlwriter/target/datax/</directory>
             <includes>
                 <include>**/*.*</include>
             </includes>
             <outputDirectory>datax</outputDirectory>
-        </fileSet>
+        </fileSet>-->
     </fileSets>
 </assembly>

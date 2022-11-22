@@ -29,40 +29,40 @@ public class CheckResultEtlProcessor implements Processor<RegCheck, StandardChec
 
     @Override
     public StandardCheckRecordList dataProcess(RegCheck check, StandardCheckRecordList checkList, CommonData commonData) {
-        /*check.setResults("双侧甲状腺形态大小正常，包膜光整，实质回声尚均匀，于左叶内见多个低回声结节，其中较大一枚大小约2.5mm×1.5mm，边界清，形态规则；于右叶见一枚囊性回声结节，大小约6.4mm×4.3mm，边界清，形态规则，内可见强光点回声；于右叶内见多个不均质回声结节，其中较大一枚大小约9.1mm×6.5mm，边界清，形态规则。CDFI：未见明显异常血流信号。");
-        check.setItemFt("甲状腺彩超");*/
         StandardCheckRecordList recordList = new StandardCheckRecordList();
         List<StandardCheckRecord> listRecord = new ArrayList<>();
         StandardCheckRecord checkRecord = new StandardCheckRecord();
         checkRecord.setItemName(check.getItemName());
-        checkRecord.setItemResults(StrUtil.isNotBlank(check.getResults()) ? TextUtils.textTrim(check.getResults()) : "");
+        String results = check.getResults();
+        if (StrUtil.isNotBlank(results)) {
+            results = TextUtils.textTrim(check.getResults());
+            results = results.replace("\\n", "。");
+        }
+        checkRecord.setItemResults(results);
         checkRecord.setItemUnit(check.getUnit());
         checkRecord.setCleanTime(new Date());
         checkRecord.setVid(check.getVid());
         checkRecord.setClassName(check.getItemFt());
         checkRecord.setCleanStatus(1);
         checkRecord.setResultsDiscrete("0");
-        checkRecord.setImageDiagnose(check.getSummary());
         try {
-        if (StrUtil.isBlank(checkRecord.getClassName())) {
-            checkRecord.setCleanStatus(EtlStatus.ETL_ERROR.getCode());
-            checkRecord.setRemark("清洗失败，未找到检查数据大项");
-            listRecord.add(checkRecord);
-            recordList.setList(listRecord);
-            return recordList;
-        }
-        String itemName = check.getItemName();
-
-        String results = checkRecord.getItemResults();
-        String normalL = check.getNormalL();
-        String normalH = check.getNormalH();
-        String itemNameComn = "";
-        Map<String, BasCheckItem> basCheckItemMap = commonData.getBasCheckItemMap();
-            if (StrUtil.isNotBlank(itemName)){
+            if (StrUtil.isBlank(checkRecord.getClassName())) {
+                checkRecord.setCleanStatus(EtlStatus.ETL_ERROR.getCode());
+                checkRecord.setRemark("清洗失败，未找到检查数据大项");
+                listRecord.add(checkRecord);
+                recordList.setList(listRecord);
+                return recordList;
+            }
+            String itemName = check.getItemName();
+            String normalL = check.getNormalL();
+            String normalH = check.getNormalH();
+            String itemNameComn = "";
+            Map<String, BasCheckItem> basCheckItemMap = commonData.getBasCheckItemMap();
+            if (StrUtil.isNotBlank(itemName)) {
                 itemName = itemName.replace("（", "(")
                         .replace("）", ")").trim();
             }
-        BasCheckItem basCheckItem = basCheckItemMap.get(itemName);
+            BasCheckItem basCheckItem = basCheckItemMap.get(itemName);
         /*if (Objects.isNull(basCheckItem)) {
             checkRecord.setCleanStatus(EtlStatus.ETL_ERROR_MATCH.getCode());
             checkRecord.setRemark("清洗未配置字典，找不到标准字典");
@@ -72,51 +72,51 @@ public class CheckResultEtlProcessor implements Processor<RegCheck, StandardChec
         } else {
             itemNameComn = basCheckItem.getItemNameStandard();
         }*/
-        if(Objects.nonNull(basCheckItem)){
-            itemNameComn = basCheckItem.getItemNameStandard();
-        }
-        //进行标准化清洗
-        checkRecord.setItemNameComn(itemNameComn);
-        String unitComm = commonData.getBasTestUnitMap().get(check.getUnit());
-        if (StrUtil.isNotBlank(unitComm)) {
-            checkRecord.setUnitComm(unitComm);
-        }
-        String reference = "";
-        if (StrUtil.isBlank(results)) {
-            checkRecord.setCleanStatus(EtlStatus.ETL_ERROR.getCode());
-            checkRecord.setRemark("清洗失败，结果值为空");
-            listRecord.add(checkRecord);
-            recordList.setList(listRecord);
-            return recordList;
-        }
-        if ("收缩压".equals(checkRecord.getItemNameComn()) || "舒张压".equals(checkRecord.getItemNameComn()) ||
-                checkRecord.getItemNameComn().contains("体重指数")) {
-            if ( checkRecord.getItemNameComn().contains("体重指数") && checkRecord.getItemNameComn().contains("-")) {
-                String temp = reference.replace("体重指数", "").replace("(", "").replace("（", "").replace("）", "").replace(")", "").trim();
-                String[] str = temp.split("-");
-                if (str != null && str.length >= 2) {
-                    normalL = str[0];
-                    normalH = str[1];
-                }
-            } else if ("收缩压".equals(checkRecord.getItemNameComn())) {
-                normalL = "90";
-                normalH = "140";
-            } else if ("舒张压".equals(checkRecord.getItemNameComn())) {
-                normalL = "60";
-                normalH = "90";
+            if (Objects.nonNull(basCheckItem)) {
+                itemNameComn = basCheckItem.getItemNameStandard();
             }
-            check.setResults(results);
-            checkRecord.setNormalL(normalL);
-            checkRecord.setNormalH(normalH);
-            checkRecord.setItemResults(results);
-            resultsDiscreteProcess(checkRecord, commonData);
-            listRecord.add(checkRecord);
-        } else {
-            //影像学，包含甲状腺处理，乳腺
-            listRecord = checkHandler(checkRecord, commonData);
-        }
-        recordList.setList(listRecord);
-        }catch (Exception e){
+            //进行标准化清洗
+            checkRecord.setItemNameComn(itemNameComn);
+            String unitComm = commonData.getBasTestUnitMap().get(check.getUnit());
+            if (StrUtil.isNotBlank(unitComm)) {
+                checkRecord.setUnitComm(unitComm);
+            }
+            String reference = "";
+            if (StrUtil.isBlank(results)) {
+                checkRecord.setCleanStatus(EtlStatus.ETL_ERROR.getCode());
+                checkRecord.setRemark("清洗失败，结果值为空");
+                listRecord.add(checkRecord);
+                recordList.setList(listRecord);
+                return recordList;
+            }
+            if ("收缩压".equals(checkRecord.getItemNameComn()) || "舒张压".equals(checkRecord.getItemNameComn()) ||
+                    checkRecord.getItemNameComn().contains("体重指数")) {
+                if (checkRecord.getItemNameComn().contains("体重指数")&& checkRecord.getItemName().contains("-")) {
+                    String temp = checkRecord.getItemName().replace("体重指数", "").replace("(", "").replace("（", "").replace("）", "").replace(")", "").trim();
+                    String[] str = temp.split("-");
+                    if (str != null && str.length >= 2) {
+                        normalL = str[0];
+                        normalH = str[1];
+                    }
+                } else if ("收缩压".equals(checkRecord.getItemNameComn())) {
+                    normalL = "90";
+                    normalH = "140";
+                } else if ("舒张压".equals(checkRecord.getItemNameComn())) {
+                    normalL = "60";
+                    normalH = "90";
+                }
+                check.setResults(results);
+                checkRecord.setNormalL(normalL);
+                checkRecord.setNormalH(normalH);
+                checkRecord.setItemResults(results);
+                resultsDiscreteProcess(checkRecord, commonData);
+                listRecord.add(checkRecord);
+            } else {
+                //影像学，包含甲状腺处理，乳腺
+                listRecord = checkHandler(checkRecord, commonData);
+            }
+            recordList.setList(listRecord);
+        } catch (Exception e) {
             LOG.info("清洗失败源数据[{}],异常[{}]", JSON.toJSONString(check), e.getMessage(), e);
         }
         return recordList;
@@ -180,39 +180,38 @@ public class CheckResultEtlProcessor implements Processor<RegCheck, StandardChec
     public List<StandardCheckRecord> checkHandler(StandardCheckRecord check, CommonData commonData) {
         List<StandardCheckRecord> temp = new ArrayList<>();
 
-        boolean levelFlag = false;
-        String results = check.getItemResults();
-        //乳腺
-        if (results.contains(EtlConst.RU_KEY)) {
-            String result = check.getImageDiagnose();
-            if (StrUtil.isNotBlank(result)) {
+            boolean levelFlag = false;
+            String results = check.getItemResults();
+            //乳腺
+            if (results.contains(EtlConst.RU_KEY)) {
+                String result = check.getItemResults();
+                if (StrUtil.isNotBlank(result)) {
                 result = result.toUpperCase();
                 result = result.replace(" ", "");
-                result = result.toUpperCase();
-                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]]?[1|Ⅰ][分级类灶]+", "BI-RADS1级");
-                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]]?[1|Ⅰ]A[分级类灶]+", "BI-RADS1A级");
-                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]]?[1|Ⅰ]B[分级类灶]+", "BI-RADS1B级");
-                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]]?[1|Ⅰ]C[分级类灶]+", "BI-RADS1C级");
-                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]]?[2|Ⅱ]A[分级类灶]+", "BI-RADS2A级");
-                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]]?[2|Ⅱ]B[分级类灶]+", "BI-RADS2B级");
-                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]]?[2|Ⅱ]C[分级类灶]+", "BI-RADS2C级");
-                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]]?[2|Ⅱ][分级类灶]+", "BI-RADS2级");
-                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]]?[3|Ⅲ][分级类灶]+", "BI-RADS3级");
-                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]]?[3|Ⅲ]A[分级类灶]+", "BI-RADS3A级");
-                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]]?[3|Ⅲ]B[分级类灶]+", "BI-RADS3B级");
-                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]]?[3|Ⅲ]C[分级类灶]+", "BI-RADS3C级");
-                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]]?[4|Ⅳ][分级类灶]+", "BI-RADS4级");
-                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]]?[4|Ⅳ]A[分级类灶]+", "BI-RADS4A级");
-                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]]?[4|Ⅳ]B[分级类灶]+", "BI-RADS4B级");
-                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]]?[4|Ⅳ]C[分级类灶]+", "BI-RADS4C级");
-                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]]?[5|Ⅴ][分级类灶]+", "BI-RADS5级");
-                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]]?[5|Ⅴ]A[分级类灶]+", "BI-RADS5A级");
-                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]]?[5|Ⅴ]B[分级类灶]+", "BI-RADS5B级");
-                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]]?[5|Ⅴ]C[分级类灶]+", "BI-RADS5C级");
-                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]]?[6|Ⅵ][分级类灶]+", "BI-RADS6级");
-                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]]?[6|Ⅵ]A[分级类灶]+", "BI-RADS6A级");
-                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]]?[6|Ⅵ]B[分级类灶]+", "BI-RADS6B级");
-                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]]?[6|Ⅵ]C[分级类灶]+", "BI-RADS6C级");
+                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]?[1|Ⅰ][分级类灶]+", "BI-RADS1级");
+                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]?[1|Ⅰ]A[分级类灶]+", "BI-RADS1A级");
+                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]?[1|Ⅰ]B[分级类灶]+", "BI-RADS1B级");
+                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]?[1|Ⅰ]C[分级类灶]+", "BI-RADS1C级");
+                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]?[2|Ⅱ]A[分级类灶]+", "BI-RADS2A级");
+                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]?[2|Ⅱ]B[分级类灶]+", "BI-RADS2B级");
+                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]?[2|Ⅱ]C[分级类灶]+", "BI-RADS2C级");
+                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]?[2|Ⅱ][分级类灶]+", "BI-RADS2级");
+                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]?[3|Ⅲ][分级类灶]+", "BI-RADS3级");
+                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]?[3|Ⅲ]A[分级类灶]+", "BI-RADS3A级");
+                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]?[3|Ⅲ]B[分级类灶]+", "BI-RADS3B级");
+                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]?[3|Ⅲ]C[分级类灶]+", "BI-RADS3C级");
+                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]?[4|Ⅳ][分级类灶]+", "BI-RADS4级");
+                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]?[4|Ⅳ]A[分级类灶]+", "BI-RADS4A级");
+                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]?[4|Ⅳ]B[分级类灶]+", "BI-RADS4B级");
+                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]?[4|Ⅳ]C[分级类灶]+", "BI-RADS4C级");
+                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]?[5|Ⅴ][分级类灶]+", "BI-RADS5级");
+                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]?[5|Ⅴ]A[分级类灶]+", "BI-RADS5A级");
+                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]?[5|Ⅴ]B[分级类灶]+", "BI-RADS5B级");
+                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]?[5|Ⅴ]C[分级类灶]+", "BI-RADS5C级");
+                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]?[6|Ⅵ][分级类灶]+", "BI-RADS6级");
+                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]?[6|Ⅵ]A[分级类灶]+", "BI-RADS6A级");
+                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]?[6|Ⅵ]B[分级类灶]+", "BI-RADS6B级");
+                result = result.replaceAll("BI-RADS[分|级|类]*\\d?[:：，,-]?[6|Ⅵ]C[分级类灶]+", "BI-RADS6C级");
                 List<String> levelListBi = ReUtil.findAll(EtlConst.BI_REGX_LEVEL, result, 0);
                 StandardCheckRecord pcr1 = new StandardCheckRecord();
                 pcr1.setItemName(EtlConst.BI_RADSLEVEL);
@@ -231,17 +230,16 @@ public class CheckResultEtlProcessor implements Processor<RegCheck, StandardChec
                     pcr1.setItemResults(s);
                     temp.add(pcr1);
                 }
-
                     EtlRuUtils.etl(check, temp);
-
             }
         }
 
         if (check.getClassName().contains(EtlConst.ITEM_THYROID)) {
             try {
-                String result = check.getImageDiagnose();
+                String result = check.getItemResults();
                 if (StringUtils.isNotBlank(result)) {
                     result = result.replaceAll("探及", "见");
+                    result= result.replaceAll(EtlConst.REGX_SENSITIVE, "******");
                     //等级提取
                     if (!levelFlag) {
                         result = result.replace(" ", "");
@@ -249,27 +247,27 @@ public class CheckResultEtlProcessor implements Processor<RegCheck, StandardChec
                         result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]?[1|Ⅰ][分级类灶]+", "TI-RADS1级");
                         result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]?[1|Ⅰ]A[分级类灶]+", "TI-RADS1A级");
                         result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]?[1|Ⅰ]B[分级类灶]+", "TI-RADS1B级");
-                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[1|Ⅰ]C[分级类灶]+", "TI-RADS1C级");
-                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[2|Ⅱ]A[分级类灶]+", "TI-RADS2A级");
-                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[2|Ⅱ]B[分级类灶]+", "TI-RADS2B级");
-                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[2|Ⅱ]C[分级类灶]+", "TI-RADS2C级");
-                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[2|Ⅱ][分级类灶]+", "TI-RADS2级");
-                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[3|Ⅲ][分级类灶]+", "TI-RADS3级");
-                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[3|Ⅲ]A[分级类灶]+", "TI-RADS3A级");
-                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[3|Ⅲ]B[分级类灶]+", "TI-RADS3B级");
-                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[3|Ⅲ]C[分级类灶]+", "TI-RADS3C级");
-                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[4|Ⅳ][分级类灶]+", "TI-RADS4级");
-                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[4|Ⅳ]A[分级类灶]+", "TI-RADS4A级");
-                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[4|Ⅳ]B[分级类灶]+", "TI-RADS4B级");
-                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[4|Ⅳ]C[分级类灶]+", "TI-RADS4C级");
-                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[5|Ⅴ][分级类灶]+", "TI-RADS5级");
-                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[5|Ⅴ]A[分级类灶]+", "TI-RADS5A级");
-                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[5|Ⅴ]B[分级类灶]+", "TI-RADS5B级");
-                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[5|Ⅴ]C[分级类灶]+", "TI-RADS5C级");
-                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[6|Ⅵ][分级类灶]+", "TI-RADS6级");
-                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[6|Ⅵ]A[分级类灶]+", "TI-RADS6A级");
-                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[6|Ⅵ]B[分级类灶]+", "TI-RADS6B级");
-                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[6|Ⅵ]C[分级类灶]+", "TI-RADS6C级");
+                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]?[1|Ⅰ]C[分级类灶]+", "TI-RADS1C级");
+                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]?[2|Ⅱ]A[分级类灶]+", "TI-RADS2A级");
+                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]?[2|Ⅱ]B[分级类灶]+", "TI-RADS2B级");
+                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]?[2|Ⅱ]C[分级类灶]+", "TI-RADS2C级");
+                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]?[2|Ⅱ][分级类灶]+", "TI-RADS2级");
+                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]?[3|Ⅲ][分级类灶]+", "TI-RADS3级");
+                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]?[3|Ⅲ]A[分级类灶]+", "TI-RADS3A级");
+                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]?[3|Ⅲ]B[分级类灶]+", "TI-RADS3B级");
+                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]?[3|Ⅲ]C[分级类灶]+", "TI-RADS3C级");
+                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]?[4|Ⅳ][分级类灶]+", "TI-RADS4级");
+                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]?[4|Ⅳ]A[分级类灶]+", "TI-RADS4A级");
+                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]?[4|Ⅳ]B[分级类灶]+", "TI-RADS4B级");
+                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]?[4|Ⅳ]C[分级类灶]+", "TI-RADS4C级");
+                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]?[5|Ⅴ][分级类灶]+", "TI-RADS5级");
+                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]?[5|Ⅴ]A[分级类灶]+", "TI-RADS5A级");
+                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]?[5|Ⅴ]B[分级类灶]+", "TI-RADS5B级");
+                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]?[5|Ⅴ]C[分级类灶]+", "TI-RADS5C级");
+                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]?[6|Ⅵ][分级类灶]+", "TI-RADS6级");
+                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]?[6|Ⅵ]A[分级类灶]+", "TI-RADS6A级");
+                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]?[6|Ⅵ]B[分级类灶]+", "TI-RADS6B级");
+                        result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]?[6|Ⅵ]C[分级类灶]+", "TI-RADS6C级");
                         List<String> levelListTi = ReUtil.findAll(EtlConst.TI_REGX_LEVEL, result, 0);
                         StandardCheckRecord pcr1 = new StandardCheckRecord();
                         pcr1.setItemName(EtlConst.RADSLEVEL);
@@ -295,8 +293,8 @@ public class CheckResultEtlProcessor implements Processor<RegCheck, StandardChec
                 String str = "";
                 int level = 0;
                 //断句前对可见进行处理
-                /*result = result.replaceAll("内见", "#")
-                        .replaceAll("可见", "#");*/
+                result = result.replaceAll("内见", "#")
+                        .replaceAll("可见", "#");
                 result = TextUtils.specialAddSigns(result);
                 List<Map<String, Object>> tempList = new ArrayList<>();
                 for (String str9 : result.split(EtlConst.SPLIT_JUHAO)) {
@@ -485,39 +483,39 @@ public class CheckResultEtlProcessor implements Processor<RegCheck, StandardChec
             }
         }
         if (results.contains(EtlConst.FEI_KEY) || results.contains(EtlConst.XIONG_KEY) || results.contains(EtlConst.QI_KEY)) {
-            String result = check.getImageDiagnose();
+            String result = check.getItemResults();
             if (StrUtil.isNotBlank(result)) {
                 result = result.replace(" ", "");
                 result = result.toUpperCase();
-                result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]?[1|Ⅰ][分级类灶]+", "TI-RADS1级");
-                result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]?[1|Ⅰ]A[分级类灶]+", "TI-RADS1A级");
-                result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]?[1|Ⅰ]B[分级类灶]+", "TI-RADS1B级");
-                result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[1|Ⅰ]C[分级类灶]+", "TI-RADS1C级");
-                result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[2|Ⅱ]A[分级类灶]+", "TI-RADS2A级");
-                result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[2|Ⅱ]B[分级类灶]+", "TI-RADS2B级");
-                result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[2|Ⅱ]C[分级类灶]+", "TI-RADS2C级");
-                result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[2|Ⅱ][分级类灶]+", "TI-RADS2级");
-                result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[3|Ⅲ][分级类灶]+", "TI-RADS3级");
-                result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[3|Ⅲ]A[分级类灶]+", "TI-RADS3A级");
-                result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[3|Ⅲ]B[分级类灶]+", "TI-RADS3B级");
-                result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[3|Ⅲ]C[分级类灶]+", "TI-RADS3C级");
-                result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[4|Ⅳ][分级类灶]+", "TI-RADS4级");
-                result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[4|Ⅳ]A[分级类灶]+", "TI-RADS4A级");
-                result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[4|Ⅳ]B[分级类灶]+", "TI-RADS4B级");
-                result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[4|Ⅳ]C[分级类灶]+", "TI-RADS4C级");
-                result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[5|Ⅴ][分级类灶]+", "TI-RADS5级");
-                result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[5|Ⅴ]A[分级类灶]+", "TI-RADS5A级");
-                result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[5|Ⅴ]B[分级类灶]+", "TI-RADS5B级");
-                result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[5|Ⅴ]C[分级类灶]+", "TI-RADS5C级");
-                result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[6|Ⅵ][分级类灶]+", "TI-RADS6级");
-                result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[6|Ⅵ]A[分级类灶]+", "TI-RADS6A级");
-                result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[6|Ⅵ]B[分级类灶]+", "TI-RADS6B级");
-                result = result.replaceAll("TI-RADS[分|级|类]*\\d?[:：，,-]]?[6|Ⅵ]C[分级类灶]+", "TI-RADS6C级");
-                List<String> levelListTi = ReUtil.findAll(EtlConst.TI_REGX_LEVEL, result, 0);
+                result = result.replaceAll("(TI|LU)-RADS[分|级|类]*\\d?[:：，,-]?[1|Ⅰ][分级类灶]+", "LU-RADS1级");
+                result = result.replaceAll("(TI|LU)-RADS[分|级|类]*\\d?[:：，,-]?[1|Ⅰ]A[分级类灶]+", "LU-RADS1A级");
+                result = result.replaceAll("(TI|LU)-RADS[分|级|类]*\\d?[:：，,-]?[1|Ⅰ]B[分级类灶]+", "LU-RADS1B级");
+                result = result.replaceAll("(TI|LU)-RADS[分|级|类]*\\d?[:：，,-]?[1|Ⅰ]C[分级类灶]+", "LU-RADS1C级");
+                result = result.replaceAll("(TI|LU)-RADS[分|级|类]*\\d?[:：，,-]?[2|Ⅱ]A[分级类灶]+", "LU-RADS2A级");
+                result = result.replaceAll("(TI|LU)-RADS[分|级|类]*\\d?[:：，,-]?[2|Ⅱ]B[分级类灶]+", "LU-RADS2B级");
+                result = result.replaceAll("(TI|LU)-RADS[分|级|类]*\\d?[:：，,-]?[2|Ⅱ]C[分级类灶]+", "LU-RADS2C级");
+                result = result.replaceAll("(TI|LU)-RADS[分|级|类]*\\d?[:：，,-]?[2|Ⅱ][分级类灶]+", "LU-RADS2级");
+                result = result.replaceAll("(TI|LU)-RADS[分|级|类]*\\d?[:：，,-]?[3|Ⅲ][分级类灶]+", "LU-RADS3级");
+                result = result.replaceAll("(TI|LU)-RADS[分|级|类]*\\d?[:：，,-]?[3|Ⅲ]A[分级类灶]+", "LU-RADS3A级");
+                result = result.replaceAll("(TI|LU)-RADS[分|级|类]*\\d?[:：，,-]?[3|Ⅲ]B[分级类灶]+", "LU-RADS3B级");
+                result = result.replaceAll("(TI|LU)-RADS[分|级|类]*\\d?[:：，,-]?[3|Ⅲ]C[分级类灶]+", "LU-RADS3C级");
+                result = result.replaceAll("(TI|LU)-RADS[分|级|类]*\\d?[:：，,-]?[4|Ⅳ][分级类灶]+", "LU-RADS4级");
+                result = result.replaceAll("(TI|LU)-RADS[分|级|类]*\\d?[:：，,-]?[4|Ⅳ]A[分级类灶]+", "LU-RADS4A级");
+                result = result.replaceAll("(TI|LU)-RADS[分|级|类]*\\d?[:：，,-]?[4|Ⅳ]B[分级类灶]+", "LU-RADS4B级");
+                result = result.replaceAll("(TI|LU)-RADS[分|级|类]*\\d?[:：，,-]?[4|Ⅳ]C[分级类灶]+", "LU-RADS4C级");
+                result = result.replaceAll("(TI|LU)-RADS[分|级|类]*\\d?[:：，,-]?[5|Ⅴ][分级类灶]+", "LU-RADS5级");
+                result = result.replaceAll("(TI|LU)-RADS[分|级|类]*\\d?[:：，,-]?[5|Ⅴ]A[分级类灶]+", "LU-RADS5A级");
+                result = result.replaceAll("(TI|LU)-RADS[分|级|类]*\\d?[:：，,-]?[5|Ⅴ]B[分级类灶]+", "LU-RADS5B级");
+                result = result.replaceAll("(TI|LU)-RADS[分|级|类]*\\d?[:：，,-]?[5|Ⅴ]C[分级类灶]+", "LU-RADS5C级");
+                result = result.replaceAll("(TI|LU)-RADS[分|级|类]*\\d?[:：，,-]?[6|Ⅵ][分级类灶]+", "LU-RADS6级");
+                result = result.replaceAll("(TI|LU)-RADS[分|级|类]*\\d?[:：，,-]?[6|Ⅵ]A[分级类灶]+", "LU-RADS6A级");
+                result = result.replaceAll("(TI|LU)-RADS[分|级|类]*\\d?[:：，,-]?[6|Ⅵ]B[分级类灶]+", "LU-RADS6B级");
+                result = result.replaceAll("(TI|LU)-RADS[分|级|类]*\\d?[:：，,-]?[6|Ⅵ]C[分级类灶]+", "LU-RADS6C级");
+                List<String> levelListTi = ReUtil.findAll(EtlConst.LU_REGX_LEVEL, result, 0);
                 StandardCheckRecord pcr1 = new StandardCheckRecord();
-                pcr1.setItemName(EtlConst.RADSLEVEL);
-                pcr1.setItemNameComn(EtlConst.RADSLEVEL);
-                pcr1.setInitResult(EtlConst.INIT_RESULT_1);
+                pcr1.setItemName(EtlConst.LU_RADSLEVEL);
+                pcr1.setItemNameComn(EtlConst.LU_RADSLEVEL);
+                pcr1.setInitResult(EtlConst.INIT_RESULT_FEI);
                 pcr1.setClassName(check.getClassName());
                 pcr1.setVid(check.getVid());
                 pcr1.setCleanTime(new Date());
@@ -527,7 +525,7 @@ public class CheckResultEtlProcessor implements Processor<RegCheck, StandardChec
                 if (levelListTi != null && !levelListTi.isEmpty()) {
                     levelListTi.sort((x1, x2) -> x1.compareTo(x2));
                     String s = levelListTi.get(levelListTi.size() - 1);
-                    s = s.replace("TI-RADS", "").replace("级", "").replace("类", "").trim();
+                    s = s.replace("LU-RADS", "").replace("级", "").replace("类", "").trim();
                     pcr1.setItemResults(s);
                     temp.add(pcr1);
                 }
@@ -551,7 +549,7 @@ public class CheckResultEtlProcessor implements Processor<RegCheck, StandardChec
         pcr1.setItemNameComn(check.getItemNameComn());
 
         if (temp.isEmpty()) {
-            String result = check.getImageDiagnose()+"。"+check.getItemResults();
+            String result = check.getItemResults();
             boolean flagA = false;
             boolean flagB = false;
             boolean flagC = false;
@@ -589,7 +587,6 @@ public class CheckResultEtlProcessor implements Processor<RegCheck, StandardChec
             }
             temp.add(pcr1);
         }
-
         return temp;
     }
 

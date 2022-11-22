@@ -37,6 +37,7 @@ public interface EtlConst {
     String JZXJB_RESULT = "有甲状腺结节";
     String RADSLEVEL = "TI-RADS分级";
     String BI_RADSLEVEL = "BI-RADS分级";
+    String LU_RADSLEVEL = "LU-RADS分级";
     String BIFIX = "BI-RADS";
     //2.4 加特殊化检查项目处理【幽⻔螺杆菌呼⽓试验】
     String HELICOBACTER_PYLORI_BREATH = "幽门螺杆菌呼气试验";
@@ -57,6 +58,7 @@ public interface EtlConst {
     String RU_KEY = "乳";
     String CLASS_KEY = "@#";
     String BAO_GAO = "报告";
+    String WJX_KEY = "★";
     /**
      * 结节直径提取正则
      */
@@ -66,6 +68,7 @@ public interface EtlConst {
     String REGX_SENSITIVE = "CDFI.*?未见|CDFI.*?可见";
     String BI_REGX_LEVEL = "BI-RADS\\w+[级|类]";
     String TI_REGX_LEVEL = "TI-RADS\\w+[级|类]";
+    String LU_REGX_LEVEL = "LU-RADS\\w+[级|类]";
 
 
     String HP_YANG = "HP阳性";
@@ -86,7 +89,7 @@ public interface EtlConst {
     List<String> NORMAL_LIST = Arrays.asList("未见异常","未见明显异常","没有", "未见","无异常","无明显异常","未发现", "未闻及","未触及","未显示");
     List<String> NEGATIVE_DATA = Arrays.asList("阴","阴性");
     List<String> POSITIVE_DATA = Arrays.asList("阳","阳性","+");
-    List<String> RU_DATA_KEY = Arrays.asList("脑","肾","视","喉","鼻","垂体","甲状腺","皮肤","耳");
+    List<String> RU_DATA_KEY = Arrays.asList("脑","肾","视","喉","鼻","垂体","甲状腺","皮肤","耳","肛");
     List<String> specialPartList = Lists.newArrayList("鼻 ", "扁桃体", "胆", "耳", "肺", "附睾", "附件", "腹",
              "肛门", "睾丸", "宫颈", "颌", "喉", "会阴", "脊柱", "甲状腺", "结肠", "口腔", "淋巴", "卵巢", "尿道", "膀胱", "盆腔", "脾", "前列腺",
             "肾", "食道", "输卵管", "输尿管", "外阴", "胃", "下肢", "血管", "咽", "眼", "腋", "胰", "阴唇", "阴道", "阴囊", "支气管", "子宫", "纵膈",

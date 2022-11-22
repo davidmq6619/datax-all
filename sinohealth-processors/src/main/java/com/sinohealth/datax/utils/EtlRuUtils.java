@@ -60,6 +60,11 @@ public class EtlRuUtils {
     public static void etl(StandardCheckRecord checkResultMsS, List<StandardCheckRecord> list) {
         //取出描述，抛弃附件后的字
         String result = checkResultMsS.getItemResults();
+        result= result.replaceAll(EtlConst.REGX_SENSITIVE, "******");
+        /*if(!result.endsWith("。")){
+            result = result + "。";
+        }
+        result = result + checkResultMsS.getImageDiagnose();*/
         List<String> hitStrs = new ArrayList<>();
         String[] splitStrings = TextUtils.splitSignsToArrByParam(result, ";；。");
         boolean flag2 = false;
@@ -71,7 +76,14 @@ public class EtlRuUtils {
                     break;
                 }
             }
-            if (flagRu) {
+            boolean flagNormal = false;
+            for (String s : EtlConst.NORMAL_LIST) {
+                if(str1.contains(s)){
+                    flagNormal = true;
+                    break;
+                }
+            }
+            if (flagRu ||flagNormal) {
                 continue;
             }
             if (str1.contains("乳")) {

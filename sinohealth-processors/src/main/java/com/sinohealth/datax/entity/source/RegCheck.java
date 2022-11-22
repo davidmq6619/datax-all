@@ -29,7 +29,6 @@ public class RegCheck implements Serializable {
     @db_alias("normal_h")
     private String normalH;
 
-    private String summary;
 
     public String getVid() {
         return vid;
@@ -87,11 +86,4 @@ public class RegCheck implements Serializable {
         this.normalH = normalH;
     }
 
-    public String getSummary() {
-        return summary;
-    }
-
-    public void setSummary(String summary) {
-        this.summary = summary;
-    }
 }

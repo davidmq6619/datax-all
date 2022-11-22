@@ -20,6 +20,9 @@ public class StandardMnStdInfo {
     @db_alias("zk_std_medical_name")
     private String zkStdMedicalMame;
 
+    @db_alias("zk_item_name")
+    private String zkItemName;
+
     public String getItemCode() {
         return itemCode;
     }
@@ -58,5 +61,13 @@ public class StandardMnStdInfo {
 
     public void setZkStdMedicalMame(String zkStdMedicalMame) {
         this.zkStdMedicalMame = zkStdMedicalMame;
+    }
+
+    public String getZkItemName() {
+        return zkItemName;
+    }
+
+    public void setZkItemName(String zkItemName) {
+        this.zkItemName = zkItemName;
     }
 }
